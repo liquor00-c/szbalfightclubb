@@ -73,6 +73,7 @@
   const admin = document.getElementById('admin');
   const loginBox = document.getElementById('loginBox');
   const panel = document.getElementById('panel');
+  let isAdmin = false;
 
   window.showPage = function(p){
     musDiv.style.display = p==='musabaka'?'block':'none';
@@ -84,6 +85,8 @@
     if(document.getElementById('pass').value === 'ben1sma1ly1ld1r1m'){
       loginBox.style.display='none';
       panel.style.display='block';
+      isAdmin = true;
+      alert('Admin girişi başarılı');
     } else alert('Şifre yanlış');
   }
 
@@ -123,7 +126,7 @@
         <div class="fighter"><img src="${m.img1}"><span>${m.n1}</span></div>
         <div class="vs">VS</div>
         <div class="fighter"><img src="${m.img2}"><span>${m.n2}</span></div>
-        <button onclick="deleteMatch('${d.id}')">Sil</button>
+        ${isAdmin ? `<button onclick="deleteMatch('${d.id}')">Sil</button>` : ``}
       </div>`
     })
   })
@@ -136,8 +139,8 @@
       <div class="score-item">
         <img src="${s.img}">
         <div class="score-name">${s.name}</div>
-        <input value="${s.score}" onchange="updateScore('${d.id}',this.value)">
-        <button onclick="deleteScore('${d.id}')">Sil</button>
+        ${isAdmin ? `<input value="${s.score}" onchange="updateScore('${d.id}',this.value)">` : `<div class="score-point">${s.score}</div>`}
+        ${isAdmin ? `<button onclick="deleteScore('${d.id}')">Sil</button>` : ``}
       </div>`
     })
   })
