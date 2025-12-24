@@ -91,13 +91,20 @@
       snap.forEach(d => {
         const m = d.data();
         musabaka.innerHTML += `
-          <div class="card">
-  <img src="${m.img1}" style="order:1">
-  <span style="flex:1">${m.n1}</span>
-  <b>VS</b>
-  <span style="flex:1;text-align:right">${m.n2}</span>
-  <img src="${m.img2}" style="order:5">
-  ${isAdmin ? `<button onclick="deleteMatch('${d.id}')">Sil</button>` : ''}
+<div class="card">
+  <div class="fighter left">
+    <img src="${m.img1}">
+    <span>${m.n1}</span>
+  </div>
+
+  <div class="vs">VS</div>
+
+  <div class="fighter right">
+    <span>${m.n2}</span>
+    <img src="${m.img2}">
+  </div>
+
+  ${isAdmin ? `<button onclick=\"deleteMatch('${d.id}')\">Sil</button>` : ''}
 </div>`;
       })
     });
@@ -181,9 +188,27 @@
     border-radius:10px;
     display:flex;
     align-items:center;
-    gap:15px;
+    gap:20px;
     border-left:6px solid var(--yellow);
-  }
+}
+
+.fighter{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex:1;
+}
+
+.fighter.right{
+    justify-content:flex-end;
+    text-align:right;
+}
+
+.vs{
+    color:var(--yellow);
+    font-weight:bold;
+    font-size:20px;
+}
 
   .card b{
     color:var(--yellow);
