@@ -1,21 +1,113 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Okul Güreş Müsabakası</title>
-  <link rel="icon" href="data:,">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Firebase CDN -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // 🔥 FIREBASE CONFIG (BURAYI KENDİ PROJENDEN AL)
+    const firebaseConfig = {
+  apiKey: "AIzaSyAf116Bb_Rv-rXI8C47EeaIlwxJQbPk7ic",
+  authDomain: "szbalfightclub-3a1ae.firebaseapp.com",
+  projectId: "szbalfightclub-3a1ae",
+  storageBucket: "szbalfightclub-3a1ae.firebasestorage.app",
+  messagingSenderId: "303031679666",
+  appId: "1:303031679666:web:142d4e8b5c4201353a67ab"
+};
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let isAdmin = false;
+
+    // SAYFA GEÇİŞİ
+    window.showPage = function(page) {
+      document.getElementById('musabaka').style.display = page === 'musabaka' ? 'block' : 'none';
+      document.getElementById('puan').style.display = page === 'puan' ? 'block' : 'none';
+      document.getElementById('admin').style.display = page === 'admin' ? 'block' : 'none';
+    }
+
+    // ADMİN GİRİŞ
+    window.login = function() {
+      const pass = document.getElementById('pass').value;
+      if (pass === 'ben1sma1ly1ld1r1m') {
+        isAdmin = true;
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('panel').style.display = 'block';
+      } else alert('Şifre yanlış');
+    }
+
+    // MÜSABAKA EKLE
+    window.addMatch = async function() {
+      if (!isAdmin) return alert('Yetkin yok');
+      await addDoc(collection(db, 'matches'), {
+        n1: n1.value,
+        n2: n2.value,
+        img1: img1.value,
+        img2: img2.value
+      });
+    }
+
+    // PUAN EKLE
+    window.addScore = async function() {
+      if (!isAdmin) return alert('Yetkin yok');
+      await addDoc(collection(db, 'scores'), {
+        name: pn.value,
+        photo: pi.value,
+        score: ps.value
+      });
+    }
+
+    // LİSTELE
+    onSnapshot(collection(db, 'matches'), snap => {
+      musabaka.innerHTML = '';
+      snap.forEach(d => {
+        const m = d.data();
+        musabaka.innerHTML += `
+          <div class="card">
+            <img src="${m.img1}"> ${m.n1}
+            <b>VS</b>
+            <img src="${m.img2}"> ${m.n2}
+            ${isAdmin ? `<button onclick="deleteMatch('${d.id}')">Sil</button>` : ''}
+          </div>`;
+      })
+    });
+
+    onSnapshot(collection(db, 'scores'), snap => {
+      puan.innerHTML = '';
+      snap.forEach(d => {
+        const s = d.data();
+        puan.innerHTML += `
+          <div class="card">
+            <img src="${s.photo}"> ${s.name} - ${s.score}
+            ${isAdmin ? `<button onclick="deleteScore('${d.id}')">Sil</button>` : ''}
+          </div>`;
+      })
+    });
+
+    window.deleteMatch = async id => {
+      if (!isAdmin) return;
+      await deleteDoc(doc(db, 'matches', id));
+    }
+
+    window.deleteScore = async id => {
+      if (!isAdmin) return;
+      await deleteDoc(doc(db, 'scores', id));
+    }
+  </script>
+
   <style>
-    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#111;color:#fff}
-    header{display:flex;gap:10px;padding:15px;background:#1c1c1c}
-    button{padding:10px 16px;border:none;cursor:pointer;background:#f5c400;font-weight:bold}
+    body{background:#111;color:#fff;font-family:Arial;margin:0}
+    header{display:flex;gap:10px;padding:15px;background:#222}
+    button{padding:10px;font-weight:bold;cursor:pointer}
     .container{padding:20px}
-    .match,.score-item{display:flex;align-items:center;gap:15px;background:#222;padding:15px;margin-bottom:15px;border-radius:8px}
-    .fighter{display:flex;align-items:center;gap:10px;flex:1}
-    .fighter img,.score-item img{width:80px;height:80px;object-fit:cover;border-radius:8px}
-    .vs{font-size:22px;font-weight:bold;color:#f5c400}
-    .score-name{flex:1;font-weight:bold}
-    .score-point{font-size:18px;color:#f5c400}
-    input{margin:5px 0;padding:8px}
+    .card{background:#333;padding:10px;margin-bottom:10px;border-radius:8px}
+    img{width:60px;height:60px;object-fit:cover;border-radius:6px}
   </style>
 </head>
 <body>
@@ -31,120 +123,25 @@
 
 <div id="admin" class="container" style="display:none">
   <div id="loginBox">
-    <h3>Admin Girişi</h3>
-    <input type="password" id="pass" placeholder="Şifre">
+    <input id="pass" type="password" placeholder="Şifre">
     <button onclick="login()">Giriş</button>
   </div>
 
   <div id="panel" style="display:none">
     <h3>Müsabaka Ekle</h3>
     <input id="n1" placeholder="Sporcu 1">
-    <input id="i1" type="file">
+    <input id="img1" placeholder="Foto URL 1">
     <input id="n2" placeholder="Sporcu 2">
-    <input id="i2" type="file">
+    <input id="img2" placeholder="Foto URL 2">
     <button onclick="addMatch()">Ekle</button>
 
     <h3>Puan Ekle</h3>
     <input id="pn" placeholder="İsim">
-    <input id="pi" type="file">
+    <input id="pi" placeholder="Foto URL">
     <input id="ps" placeholder="Puan (0-1)">
     <button onclick="addScore()">Kaydet</button>
   </div>
 </div>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  const firebaseConfig = {
-  apiKey: "AIzaSyAf116Bb_Rv-rXI8C47EeaIlwxJQbPk7ic",
-  authDomain: "szbalfightclub-3a1ae.firebaseapp.com",
-  projectId: "szbalfightclub-3a1ae",
-  storageBucket: "szbalfightclub-3a1ae.firebasestorage.app",
-  messagingSenderId: "303031679666",
-  appId: "1:303031679666:web:142d4e8b5c4201353a67ab"
-};
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const musDiv = document.getElementById('musabaka');
-  const puanDiv = document.getElementById('puan');
-  const admin = document.getElementById('admin');
-  const loginBox = document.getElementById('loginBox');
-  const panel = document.getElementById('panel');
-  let isAdmin = false;
-
-  window.showPage = function(p){
-    musDiv.style.display = p==='musabaka'?'block':'none';
-    puanDiv.style.display = p==='puan'?'block':'none';
-    admin.style.display = p==='admin'?'block':'none';
-  }
-
-  window.login = function(){
-    if(document.getElementById('pass').value === 'ben1sma1ly1ld1r1m'){
-      loginBox.style.display='none';
-      panel.style.display='block';
-      isAdmin = true;
-      alert('Admin girişi başarılı');
-    } else alert('Şifre yanlış');
-  }
-
-  function fileToBase64(file){
-    return new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(file)})
-  }
-
-  window.addMatch = async function(){
-    const img1 = await fileToBase64(i1.files[0]);
-    const img2 = await fileToBase64(i2.files[0]);
-    await addDoc(collection(db,'matches'),{n1:n1.value,img1,n2:n2.value,img2});
-  }
-
-  window.addScore = async function(){
-    const img = await fileToBase64(pi.files[0]);
-    await addDoc(collection(db,'scores'),{name:pn.value,img,score:ps.value});
-  }
-
-  window.deleteMatch = async function(id){
-    await deleteDoc(doc(db,'matches',id));
-  }
-
-  window.deleteScore = async function(id){
-    await deleteDoc(doc(db,'scores',id));
-  }
-
-  window.updateScore = async function(id,val){
-    await updateDoc(doc(db,'scores',id),{score:val});
-  }
-
-  onSnapshot(collection(db,'matches'),snap=>{
-    musDiv.innerHTML='';
-    snap.forEach(d=>{
-      const m=d.data();
-      musDiv.innerHTML+=`
-      <div class="match">
-        <div class="fighter"><img src="${m.img1}"><span>${m.n1}</span></div>
-        <div class="vs">VS</div>
-        <div class="fighter"><img src="${m.img2}"><span>${m.n2}</span></div>
-        ${isAdmin ? `<button onclick="deleteMatch('${d.id}')">Sil</button>` : ``}
-      </div>`
-    })
-  })
-
-  onSnapshot(collection(db,'scores'),snap=>{
-    puanDiv.innerHTML='';
-    snap.forEach(d=>{
-      const s=d.data();
-      puanDiv.innerHTML+=`
-      <div class="score-item">
-        <img src="${s.img}">
-        <div class="score-name">${s.name}</div>
-        ${isAdmin ? `<input value="${s.score}" onchange="updateScore('${d.id}',this.value)">` : `<div class="score-point">${s.score}</div>`}
-        ${isAdmin ? `<button onclick="deleteScore('${d.id}')">Sil</button>` : ``}
-      </div>`
-    })
-  })
-</script>
 
 </body>
 </html>
