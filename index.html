@@ -2,106 +2,62 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Müsabaka & Puan Sistemi</title>
+<title>Okul Güreş Müsabakası</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-body {
-  font-family: Arial;
-  background:#0f0f0f;
-  color:white;
-  margin:0;
-}
-header {
-  background:#ffc400;
-  color:black;
-  padding:15px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-button {
-  background:#ffc400;
-  border:none;
-  padding:8px 12px;
-  cursor:pointer;
-  font-weight:bold;
-}
-input { padding:6px; }
-.section { padding:20px; }
-.card {
-  background:#1b1b1b;
-  padding:10px;
-  margin-bottom:10px;
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.card img {
-  width:50px;
-  height:50px;
-  object-fit:cover;
-  border-radius:50%;
-}
-.vs { margin:0 10px; font-weight:bold; color:#ffc400; }
-.admin-only { display:none; }
-.delete-btn {
-  background:red;
-  color:white;
-}
+:root{--yellow:#f5c400;--dark:#111;--dark2:#1c1c1c;--card:#222}
+body{margin:0;font-family:Arial;background:var(--dark);color:#fff}
+header{display:flex;gap:12px;padding:15px;background:var(--dark2);border-bottom:2px solid var(--yellow)}
+header button{background:transparent;color:#fff;border:2px solid var(--yellow);padding:10px 18px;font-weight:bold;border-radius:6px;cursor:pointer}
+header button:hover{background:var(--yellow);color:#000}
+.container{padding:25px;max-width:900px;margin:auto}
+.card{background:var(--card);padding:15px;margin-bottom:15px;border-radius:10px;display:flex;align-items:center;gap:20px;border-left:6px solid var(--yellow)}
+.fighter{display:flex;align-items:center;gap:10px;flex:1}
+.fighter.right{justify-content:flex-end;text-align:right}
+.vs{color:var(--yellow);font-size:22px;font-weight:bold}
+img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:2px solid var(--yellow)}
+.card button{background:var(--yellow);border:none;padding:8px 14px;font-weight:bold;border-radius:6px;cursor:pointer}
+input{width:100%;padding:10px;margin-bottom:10px;border-radius:6px;border:none}
+h3{color:var(--yellow)}
 </style>
 </head>
-
 <body>
 
 <header>
-  <div>
-    <button onclick="show('matches')">Müsabakalar</button>
-    <button onclick="show('scores')">Puan Listesi</button>
-    <button onclick="show('admin')">ADMIN</button>
-  </div>
-  <div id="adminStatus">Admin: Kapalı</div>
+<button onclick="showPage('musabaka')">MÜSABAKALAR</button>
+<button onclick="showPage('puan')">PUAN LİSTESİ</button>
+<button onclick="showPage('admin')">ADMİN</button>
 </header>
 
-<!-- MÜSABAKALAR -->
-<div id="matches" class="section">
-  <h2>Müsabakalar</h2>
-  <div id="matchList"></div>
+<div id="musabaka" class="container"></div>
+<div id="puan" class="container" style="display:none"></div>
 
-  <div class="admin-only">
-    <h3>Müsabaka Ekle</h3>
-    <input id="aName"><input id="aPhoto" placeholder="Foto URL">
-    <span class="vs">VS</span>
-    <input id="bName"><input id="bPhoto" placeholder="Foto URL">
-    <button onclick="addMatch()">Ekle</button>
-  </div>
+<div id="admin" class="container" style="display:none">
+<div id="loginBox">
+<input id="pass" type="password" placeholder="Admin Şifre">
+<button onclick="login()">Giriş</button>
 </div>
 
-<!-- PUAN -->
-<div id="scores" class="section" style="display:none">
-  <h2>Puan Listesi</h2>
-  <div id="scoreList"></div>
+<div id="panel" style="display:none">
+<h3>Müsabaka Ekle</h3>
+<input id="n1" placeholder="Sporcu 1">
+<input id="file1" type="file">
+<input id="n2" placeholder="Sporcu 2">
+<input id="file2" type="file">
+<button onclick="addMatch()">Ekle</button>
 
-  <div class="admin-only">
-    <h3>Puan Ekle</h3>
-    <input id="sName">
-    <input id="sPhoto" placeholder="Foto URL">
-    <input id="sPoint" type="number">
-    <button onclick="addScore()">Kaydet</button>
-  </div>
+<h3>Puan Ekle</h3>
+<input id="pn" placeholder="İsim">
+<input id="scoreFile" type="file">
+<input id="ps" placeholder="Puan">
+<button onclick="addScore()">Kaydet</button>
+</div>
 </div>
 
-<!-- ADMIN -->
-<div id="admin" class="section" style="display:none">
-  <h2>Admin Girişi</h2>
-  <input type="password" id="adminPass">
-  <button onclick="login()">Giriş</button>
-</div>
-
-<!-- FIREBASE -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, getDocs, deleteDoc, doc
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAf116Bb_Rv-rXI8C47EeaIlwxJQbPk7ic",
@@ -111,91 +67,83 @@ const firebaseConfig = {
   messagingSenderId: "303031679666",
   appId: "1:303031679666:web:142d4e8b5c4201353a67ab"
 };
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
-let isAdmin = false;
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+let isAdmin=false;
 
-window.show = (id)=>{
-  ["matches","scores","admin"].forEach(s=>document.getElementById(s).style.display="none");
-  document.getElementById(id).style.display="block";
+window.showPage=p=>{
+  ['musabaka','puan','admin'].forEach(id=>document.getElementById(id).style.display=id===p?'block':'none');
 }
 
-window.login = ()=>{
-  if(document.getElementById("adminPass").value==="ben1sma1ly1ld1r1m"){
+window.login=()=>{
+  if(pass.value==='ben1sma1ly1ld1r1m'){
     isAdmin=true;
-    document.getElementById("adminStatus").innerText="Admin: Açık";
-    document.querySelectorAll(".admin-only").forEach(e=>e.style.display="block");
-    loadAll();
-  } else alert("Hatalı şifre");
+    loginBox.style.display='none';
+    panel.style.display='block';
+    alert('Admin aktif');
+  }else alert('Şifre yanlış');
 }
 
-async function loadAll(){
-  loadMatches();
-  loadScores();
+window.addMatch=()=>{
+  if(!isAdmin)return;
+  const f1=file1.files[0],f2=file2.files[0];
+  if(!f1||!f2)return alert('Foto seç');
+  const r1=new FileReader(),r2=new FileReader();
+  r1.onload=()=>{r2.onload=async()=>{
+    await addDoc(collection(db,'matches'),{n1:n1.value,n2:n2.value,img1:r1.result,img2:r2.result});
+  };r2.readAsDataURL(f2)};
+  r1.readAsDataURL(f1);
 }
 
-async function loadMatches(){
-  matchList.innerHTML="";
-  const snap = await getDocs(collection(db,"matches"));
+window.addScore=()=>{
+  if(!isAdmin)return;
+  const f=scoreFile.files[0];
+  if(!f)return alert('Foto seç');
+  const r=new FileReader();
+  r.onload=async()=>{await addDoc(collection(db,'scores'),{name:pn.value,score:ps.value,photo:r.result});};
+  r.readAsDataURL(f);
+}
+
+onSnapshot(collection(db,'matches'),snap=>{
+  musabaka.innerHTML='';
   snap.forEach(d=>{
     const m=d.data();
-    matchList.innerHTML+=`
+    musabaka.innerHTML+=`
     <div class="card">
-      <img src="${m.aPhoto}">
-      ${m.aName}
-      <span class="vs">VS</span>
-      <img src="${m.bPhoto}">
-      ${m.bName}
-      ${isAdmin?`<button class="delete-btn" onclick="deleteMatch('${d.id}')">Sil</button>`:""}
+      <div class="fighter"><img src="${m.img1}"><span>${m.n1}</span></div>
+      <div class="vs">VS</div>
+      <div class="fighter right"><span>${m.n2}</span><img src="${m.img2}"></div>
+      ${isAdmin?`<button onclick="deleteMatch('${d.id}')">Sil</button>`:''}
     </div>`;
   });
-}
+});
 
-async function loadScores(){
-  scoreList.innerHTML="";
-  const snap = await getDocs(collection(db,"scores"));
+onSnapshot(collection(db,'scores'),snap=>{
+  puan.innerHTML='';
   snap.forEach(d=>{
     const s=d.data();
-    scoreList.innerHTML+=`
+    puan.innerHTML+=`
     <div class="card">
-      <img src="${s.photo}">
-      ${s.name} - ${s.point}
-      ${isAdmin?`<button class="delete-btn" onclick="deleteScore('${d.id}')">Sil</button>`:""}
+      <img src="${s.photo}"><b>${s.name}</b> - ${s.score}
+      ${isAdmin?`<button onclick="deleteScore('${d.id}')">Sil</button>`:''}
     </div>`;
   });
-}
+});
 
-window.addMatch = async ()=>{
-  if(!isAdmin) return;
-  await addDoc(collection(db,"matches"),{
-    aName:aName.value,aPhoto:aPhoto.value,
-    bName:bName.value,bPhoto:bPhoto.value
-  });
-  loadMatches();
-}
+window.deleteMatch=id=>{
+  if(!isAdmin) return alert('Yetkiniz yok');
+  if(confirm('Bu müsabakayı silmek istediğinize emin misiniz?')){
+    deleteDoc(doc(db,'matches',id));
+  }
+};
 
-window.addScore = async ()=>{
-  if(!isAdmin) return;
-  await addDoc(collection(db,"scores"),{
-    name:sName.value,photo:sPhoto.value,point:sPoint.value
-  });
-  loadScores();
-}
-
-window.deleteMatch = async(id)=>{
-  if(!isAdmin) return;
-  await deleteDoc(doc(db,"matches",id));
-  loadMatches();
-}
-
-window.deleteScore = async(id)=>{
-  if(!isAdmin) return;
-  await deleteDoc(doc(db,"scores",id));
-  loadScores();
-}
-
-loadAll();
+window.deleteScore=id=>{
+  if(!isAdmin) return alert('Yetkiniz yok');
+  if(confirm('Bu puanı silmek istediğinize emin misiniz?')){
+    deleteDoc(doc(db,'scores',id));
+  }
+};
 </script>
 </body>
 </html>
