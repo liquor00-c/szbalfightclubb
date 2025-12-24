@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>SZBAL FİGHT CLUB</title>
+  <title>Okul Güreş Müsabakası</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Firebase CDN -->
@@ -71,17 +71,26 @@
     window.addScore = function(){
   if(!isAdmin) return alert('Yetkin yok');
 
-  const f = document.getElementById('scoreFile').files[0];
-  if(!f) return alert('Foto seç');
+  const name = document.getElementById('pn').value;
+  const point = document.getElementById('ps').value;
+  const file = document.getElementById('scoreFile').files[0];
 
-  const r = new FileReader();
-  r.onload = async ()=>{
+  if(!name || !point || !file) return alert('Tüm alanları doldur');
+
+  const reader = new FileReader();
+  reader.onload = async () => {
     await addDoc(collection(db,'scores'),{
-      name: pn.value,
-      score: ps.value,
-      photo: r.result
+      name: name,
+      score: point,
+      photo: reader.result
     });
-  }
+
+    document.getElementById('pn').value='';
+    document.getElementById('ps').value='';
+    document.getElementById('scoreFile').value='';
+  };
+  reader.readAsDataURL(file);
+}
   r.readAsDataURL(f);
 }
 
