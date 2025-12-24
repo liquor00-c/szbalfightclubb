@@ -103,10 +103,36 @@
     await addDoc(collection(db,'scores'),{name:pn.value,img,score:ps.value});
   }
 
+  window.deleteMatch = async function(id){
+    await deleteDoc(doc(db,'matches',id));
+  }
+
+  window.deleteScore = async function(id){
+    await deleteDoc(doc(db,'scores',id));
+  }
+
+  window.updateScore = async function(id,val){
+    await updateDoc(doc(db,'scores',id),{score:val});
+  }
+
+  window.addScore = async function(){
+    const img = await fileToBase64(pi.files[0]);
+    await addDoc(collection(db,'scores'),{name:pn.value,img,score:ps.value});
+  }
+
   onSnapshot(collection(db,'matches'),snap=>{
     musDiv.innerHTML='';
     snap.forEach(d=>{
       const m=d.data();
+      musDiv.innerHTML+=`
+      <div class="match">
+        <div class="fighter"><img src="${m.img1}"><span>${m.n1}</span></div>
+        <div class="vs">VS</div>
+        <div class="fighter"><img src="${m.img2}"><span>${m.n2}</span></div>
+        <button onclick="deleteMatch('${d.id}')">Sil</button>
+      </div>`
+    })
+  });
       musDiv.innerHTML+=`<div class="match"><div class="fighter"><img src="${m.img1}"><span>${m.n1}</span></div><div class="vs">VS</div><div class="fighter"><img src="${m.img2}"><span>${m.n2}</span></div></div>`
     })
   })
@@ -115,6 +141,15 @@
     puanDiv.innerHTML='';
     snap.forEach(d=>{
       const s=d.data();
+      puanDiv.innerHTML+=`
+      <div class="score-item">
+        <img src="${s.img}">
+        <div class="score-name">${s.name}</div>
+        <input value="${s.score}" onchange="updateScore('${d.id}', this.value)">
+        <button onclick="deleteScore('${d.id}')">Sil</button>
+      </div>`
+    })
+  });
       puanDiv.innerHTML+=`<div class="score-item"><img src="${s.img}"><div class="score-name">${s.name}</div><div class="score-point">${s.score}</div></div>`
     })
   })
