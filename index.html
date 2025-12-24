@@ -70,11 +70,13 @@
         const m = d.data();
         musabaka.innerHTML += `
           <div class="card">
-            <img src="${m.img1}"> ${m.n1}
-            <b>VS</b>
-            <img src="${m.img2}"> ${m.n2}
-            ${isAdmin ? `<button onclick="deleteMatch('${d.id}')">Sil</button>` : ''}
-          </div>`;
+  <img src="${m.img1}" style="order:1">
+  <span style="flex:1">${m.n1}</span>
+  <b>VS</b>
+  <span style="flex:1;text-align:right">${m.n2}</span>
+  <img src="${m.img2}" style="order:5">
+  ${isAdmin ? `<button onclick="deleteMatch('${d.id}')">Sil</button>` : ''}
+</div>`;
       })
     });
 
@@ -84,9 +86,13 @@
         const s = d.data();
         puan.innerHTML += `
           <div class="card">
-            <img src="${s.photo}"> ${s.name} - ${s.score}
-            ${isAdmin ? `<button onclick="deleteScore('${d.id}')">Sil</button>` : ''}
-          </div>`;
+  <img src="${m.img1}" style="order:1">
+  <span style="flex:1">${m.n1}</span>
+  <b>VS</b>
+  <span style="flex:1;text-align:right">${m.n2}</span>
+  <img src="${m.img2}" style="order:5">
+  ${isAdmin ? `<button onclick="deleteMatch('${d.id}')">Sil</button>` : ''}
+</div>`;
       })
     });
 
@@ -218,9 +224,9 @@
   <div id="panel" style="display:none">
     <h3>Müsabaka Ekle</h3>
     <input id="n1" placeholder="Sporcu 1">
-    <input id="img1" placeholder="Foto URL 1">
-    <input id="n2" placeholder="Sporcu 2">
-    <input id="img2" placeholder="Foto URL 2">
+    <input id="file1" type="file">
+<input id="n2" placeholder="Sporcu 2">
+<input id="file2" type="file">
     <button onclick="addMatch()">Ekle</button>
 
     <h3>Puan Ekle</h3>
