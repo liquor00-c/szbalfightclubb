@@ -76,13 +76,15 @@ window.showPage=p=>{
   ['musabaka','puan','admin'].forEach(id=>document.getElementById(id).style.display=id===p?'block':'none');
 }
 
-window.login=()=>{
+window.login = () => {
   if(pass.value==='ben1sma1ly1ld1r1m'){
-    isAdmin=true;
-    loginBox.style.display='none';
-    panel.style.display='block';
+    isAdmin = true;
+    loginBox.style.display = 'none';
+    panel.style.display = 'block';
     alert('Admin aktif');
-  }else alert('Şifre yanlış');
+    renderMatches();
+    renderScores();
+  } else alert('Şifre yanlış');
 }
 
 window.addMatch=()=>{
@@ -105,31 +107,40 @@ window.addScore=()=>{
   r.readAsDataURL(f);
 }
 
-onSnapshot(collection(db,'matches'),snap=>{
-  musabaka.innerHTML='';
-  snap.forEach(d=>{
-    const m=d.data();
-    musabaka.innerHTML+=`
-    <div class="card">
-      <div class="fighter"><img src="${m.img1}"><span>${m.n1}</span></div>
-      <div class="vs">VS</div>
-      <div class="fighter right"><span>${m.n2}</span><img src="${m.img2}"></div>
-      ${isAdmin?`<button onclick="deleteMatch('${d.id}')">Sil</button>`:''}
-    </div>`;
+// Fonksiyonlara ayır ve isAdmin değişince tekrar render edilecek
+const renderMatches = () => {
+  onSnapshot(collection(db,'matches'),snap=>{
+    musabaka.innerHTML='';
+    snap.forEach(d=>{
+      const m=d.data();
+      musabaka.innerHTML+=`
+      <div class="card">
+        <div class="fighter"><img src="${m.img1}"><span>${m.n1}</span></div>
+        <div class="vs">VS</div>
+        <div class="fighter right"><span>${m.n2}</span><img src="${m.img2}"></div>
+        ${isAdmin?`<button onclick="deleteMatch('${d.id}')">Sil</button>`:''}
+      </div>`;
+    });
   });
-});
+}
 
-onSnapshot(collection(db,'scores'),snap=>{
-  puan.innerHTML='';
-  snap.forEach(d=>{
-    const s=d.data();
-    puan.innerHTML+=`
-    <div class="card">
-      <img src="${s.photo}"><b>${s.name}</b> - ${s.score}
-      ${isAdmin?`<button onclick="deleteScore('${d.id}')">Sil</button>`:''}
-    </div>`;
+const renderScores = () => {
+  onSnapshot(collection(db,'scores'),snap=>{
+    puan.innerHTML='';
+    snap.forEach(d=>{
+      const s=d.data();
+      puan.innerHTML+=`
+      <div class="card">
+        <img src="${s.photo}"><b>${s.name}</b> - ${s.score}
+        ${isAdmin?`<button onclick="deleteScore('${d.id}')">Sil</button>`:''}
+      </div>`;
+    });
   });
-});
+}
+
+// Başlangıçta çağır
+renderMatches();
+renderScores();
 
 window.deleteMatch=id=>{
   if(!isAdmin) return alert('Yetkiniz yok');
