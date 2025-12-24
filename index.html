@@ -9,13 +9,13 @@
     header{display:flex;gap:10px;padding:15px;background:#1c1c1c}
     button{padding:10px 16px;border:none;cursor:pointer;background:#f5c400;font-weight:bold}
     .container{padding:20px}
-    .match,.score-item{display:flex;align-items:center;gap:20px;background:#222;padding:15px;margin-bottom:15px;border-radius:8px}
+    .match,.score-item{display:flex;align-items:center;gap:15px;background:#222;padding:15px;margin-bottom:15px;border-radius:8px}
     .fighter{display:flex;align-items:center;gap:10px;flex:1}
     .fighter img,.score-item img{width:80px;height:80px;object-fit:cover;border-radius:8px}
     .vs{font-size:22px;font-weight:bold;color:#f5c400}
     .score-name{flex:1;font-weight:bold}
     .score-point{font-size:18px;color:#f5c400}
-    input{margin:5px 0;padding:8px;width:100%}
+    input{margin:5px 0;padding:8px}
   </style>
 </head>
 <body>
@@ -52,18 +52,9 @@
   </div>
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
-  import { 
-  getFirestore, 
-  collection, 
-  addDoc, 
-  onSnapshot, 
-  deleteDoc, 
-  doc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-  import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
   apiKey: "AIzaSyAf116Bb_Rv-rXI8C47EeaIlwxJQbPk7ic",
@@ -123,11 +114,6 @@
     await updateDoc(doc(db,'scores',id),{score:val});
   }
 
-  window.addScore = async function(){
-    const img = await fileToBase64(pi.files[0]);
-    await addDoc(collection(db,'scores'),{name:pn.value,img,score:ps.value});
-  }
-
   onSnapshot(collection(db,'matches'),snap=>{
     musDiv.innerHTML='';
     snap.forEach(d=>{
@@ -140,9 +126,6 @@
         <button onclick="deleteMatch('${d.id}')">Sil</button>
       </div>`
     })
-  });
-      musDiv.innerHTML+=`<div class="match"><div class="fighter"><img src="${m.img1}"><span>${m.n1}</span></div><div class="vs">VS</div><div class="fighter"><img src="${m.img2}"><span>${m.n2}</span></div></div>`
-    })
   })
 
   onSnapshot(collection(db,'scores'),snap=>{
@@ -153,16 +136,12 @@
       <div class="score-item">
         <img src="${s.img}">
         <div class="score-name">${s.name}</div>
-        <input value="${s.score}" onchange="updateScore('${d.id}', this.value)">
+        <input value="${s.score}" onchange="updateScore('${d.id}',this.value)">
         <button onclick="deleteScore('${d.id}')">Sil</button>
       </div>`
-    })
-  });
-      puanDiv.innerHTML+=`<div class="score-item"><img src="${s.img}"><div class="score-name">${s.name}</div><div class="score-point">${s.score}</div></div>`
     })
   })
 </script>
 
 </body>
 </html>
-
