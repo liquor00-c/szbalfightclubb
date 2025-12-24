@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Okul Güreş Müsabakası</title>
+  <title>SZBAL FİGHT CLUB</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- Firebase CDN -->
@@ -43,25 +43,47 @@
     }
 
     // MÜSABAKA EKLE
-    window.addMatch = async function() {
-      if (!isAdmin) return alert('Yetkin yok');
-      await addDoc(collection(db, 'matches'), {
+    window.addMatch = function(){
+  if(!isAdmin) return alert('Yetkin yok');
+
+  const f1 = document.getElementById('file1').files[0];
+  const f2 = document.getElementById('file2').files[0];
+  if(!f1 || !f2) return alert('Fotoğrafları seç');
+
+  const r1 = new FileReader();
+  const r2 = new FileReader();
+
+  r1.onload = ()=>{
+    r2.onload = async ()=>{
+      await addDoc(collection(db,'matches'),{
         n1: n1.value,
         n2: n2.value,
-        img1: img1.value,
-        img2: img2.value
+        img1: r1.result,
+        img2: r2.result
       });
     }
+    r2.readAsDataURL(f2);
+  }
+  r1.readAsDataURL(f1);
+}
 
     // PUAN EKLE
-    window.addScore = async function() {
-      if (!isAdmin) return alert('Yetkin yok');
-      await addDoc(collection(db, 'scores'), {
-        name: pn.value,
-        photo: pi.value,
-        score: ps.value
-      });
-    }
+    window.addScore = function(){
+  if(!isAdmin) return alert('Yetkin yok');
+
+  const f = document.getElementById('scoreFile').files[0];
+  if(!f) return alert('Foto seç');
+
+  const r = new FileReader();
+  r.onload = async ()=>{
+    await addDoc(collection(db,'scores'),{
+      name: pn.value,
+      score: ps.value,
+      photo: r.result
+    });
+  }
+  r.readAsDataURL(f);
+}
 
     // LİSTELE
     onSnapshot(collection(db, 'matches'), snap => {
@@ -231,8 +253,8 @@
 
     <h3>Puan Ekle</h3>
     <input id="pn" placeholder="İsim">
-    <input id="pi" placeholder="Foto URL">
-    <input id="ps" placeholder="Puan (0-1)">
+<input id="scoreFile" type="file">
+<input id="ps" placeholder="Puan (0-1)">
     <button onclick="addScore()">Kaydet</button>
   </div>
 </div>
