@@ -1,17 +1,65 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Okul Güreş Müsabakası</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<title>Okul Güreş Müsabakası</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Firebase CDN -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<style>
+:root{--yellow:#f5c400;--dark:#111;--dark2:#1c1c1c;--card:#222}
+body{margin:0;font-family:Arial;background:var(--dark);color:#fff}
+header{display:flex;gap:12px;padding:15px;background:var(--dark2);border-bottom:2px solid var(--yellow)}
+header button{background:transparent;color:#fff;border:2px solid var(--yellow);padding:10px 18px;font-weight:bold;border-radius:6px;cursor:pointer}
+header button:hover{background:var(--yellow);color:#000}
+.container{padding:25px;max-width:900px;margin:auto}
+.card{background:var(--card);padding:15px;margin-bottom:15px;border-radius:10px;display:flex;align-items:center;gap:20px;border-left:6px solid var(--yellow)}
+.fighter{display:flex;align-items:center;gap:10px;flex:1}
+.fighter.right{justify-content:flex-end;text-align:right}
+.vs{color:var(--yellow);font-size:22px;font-weight:bold}
+img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:2px solid var(--yellow)}
+.card button{background:var(--yellow);border:none;padding:8px 14px;font-weight:bold;border-radius:6px;cursor:pointer}
+input{width:100%;padding:10px;margin-bottom:10px;border-radius:6px;border:none}
+h3{color:var(--yellow)}
+</style>
+</head>
+<body>
 
-    // 🔥 FIREBASE CONFIG (BURAYI KENDİ PROJENDEN AL)
-    const firebaseConfig = {
+<header>
+<button onclick="showPage('musabaka')">MÜSABAKALAR</button>
+<button onclick="showPage('puan')">PUAN LİSTESİ</button>
+<button onclick="showPage('admin')">ADMİN</button>
+</header>
+
+<div id="musabaka" class="container"></div>
+<div id="puan" class="container" style="display:none"></div>
+
+<div id="admin" class="container" style="display:none">
+<div id="loginBox">
+<input id="pass" type="password" placeholder="Admin Şifre">
+<button onclick="login()">Giriş</button>
+</div>
+
+<div id="panel" style="display:none">
+<h3>Müsabaka Ekle</h3>
+<input id="n1" placeholder="Sporcu 1">
+<input id="file1" type="file">
+<input id="n2" placeholder="Sporcu 2">
+<input id="file2" type="file">
+<button onclick="addMatch()">Ekle</button>
+
+<h3>Puan Ekle</h3>
+<input id="pn" placeholder="İsim">
+<input id="scoreFile" type="file">
+<input id="ps" placeholder="Puan">
+<button onclick="addScore()">Kaydet</button>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
   apiKey: "AIzaSyAf116Bb_Rv-rXI8C47EeaIlwxJQbPk7ic",
   authDomain: "szbalfightclub-3a1ae.firebaseapp.com",
   projectId: "szbalfightclub-3a1ae",
@@ -20,278 +68,49 @@
   appId: "1:303031679666:web:142d4e8b5c4201353a67ab"
 };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+let isAdmin=false;
 
-    let isAdmin = false;
-
-    // SAYFA GEÇİŞİ
-    window.showPage = function(page) {
-      document.getElementById('musabaka').style.display = page === 'musabaka' ? 'block' : 'none';
-      document.getElementById('puan').style.display = page === 'puan' ? 'block' : 'none';
-      document.getElementById('admin').style.display = page === 'admin' ? 'block' : 'none';
-    }
-
-    // ADMİN GİRİŞ
-    window.login = function() {
-      const pass = document.getElementById('pass').value;
-      if (pass === 'ben1sma1ly1ld1r1m') {
-        isAdmin = true;
-        document.getElementById('loginBox').style.display = 'none';
-        document.getElementById('panel').style.display = 'block';
-      } else alert('Şifre yanlış');
-    }
-
-    // MÜSABAKA EKLE
-    window.addMatch = function(){
-  if(!isAdmin) return alert('Yetkin yok');
-
-  const f1 = document.getElementById('file1').files[0];
-  const f2 = document.getElementById('file2').files[0];
-  if(!f1 || !f2) return alert('Fotoğrafları seç');
-
-  const r1 = new FileReader();
-  const r2 = new FileReader();
-
-  r1.onload = ()=>{
-    r2.onload = async ()=>{
-      await addDoc(collection(db,'matches'),{
-        n1: n1.value,
-        n2: n2.value,
-        img1: r1.result,
-        img2: r2.result
-      });
-    }
-    r2.readAsDataURL(f2);
-  }
-  r1.readAsDataURL(f1);
+window.showPage=p=>{
+['musabaka','puan','admin'].forEach(id=>document.getElementById(id).style.display=id===p?'block':'none');
 }
 
-    // PUAN EKLE
-    window.addScore = function(){
-  if(!isAdmin) return alert('Yetkin yok');
-
-  const name = document.getElementById('pn').value;
-  const point = document.getElementById('ps').value;
-  const file = document.getElementById('scoreFile').files[0];
-
-  if(!name || !point || !file) return alert('Tüm alanları doldur');
-
-  const reader = new FileReader();
-  reader.onload = async () => {
-    await addDoc(collection(db,'scores'),{
-      name: name,
-      score: point,
-      photo: reader.result
-    });
-
-    document.getElementById('pn').value='';
-    document.getElementById('ps').value='';
-    document.getElementById('scoreFile').value='';
-  };
-  reader.readAsDataURL(file);
-}
-  r.readAsDataURL(f);
+window.login=()=>{
+if(pass.value==='ben1sma1ly1ld1r1m'){
+isAdmin=true;loginBox.style.display='none';panel.style.display='block';alert('Admin aktif');
+}else alert('Şifre yanlış');
 }
 
-    // LİSTELE
-    onSnapshot(collection(db, 'matches'), snap => {
-      musabaka.innerHTML = '';
-      snap.forEach(d => {
-        const m = d.data();
-        musabaka.innerHTML += `
-<div class="card">
-  <div class="fighter left">
-    <img src="${m.img1}">
-    <span>${m.n1}</span>
-  </div>
-
-  <div class="vs">VS</div>
-
-  <div class="fighter right">
-    <span>${m.n2}</span>
-    <img src="${m.img2}">
-  </div>
-
-  ${isAdmin ? `<button onclick=\"deleteMatch('${d.id}')\">Sil</button>` : ''}
-</div>`;
-      })
-    });
-
-    onSnapshot(collection(db, 'scores'), snap => {
-      puan.innerHTML = '';
-      snap.forEach(d => {
-        const s = d.data();
-        puan.innerHTML += `
-          <div class="card">
-  <img src="${m.img1}" style="order:1">
-  <span style="flex:1">${m.n1}</span>
-  <b>VS</b>
-  <span style="flex:1;text-align:right">${m.n2}</span>
-  <img src="${m.img2}" style="order:5">
-  ${isAdmin ? `<button onclick="deleteMatch('${d.id}')">Sil</button>` : ''}
-</div>`;
-      })
-    });
-
-    window.deleteMatch = async id => {
-      if (!isAdmin) return;
-      await deleteDoc(doc(db, 'matches', id));
-    }
-
-    window.deleteScore = async id => {
-      if (!isAdmin) return;
-      await deleteDoc(doc(db, 'scores', id));
-    }
-  </script>
-
-  <style>
-  :root{
-    --yellow:#f5c400;
-    --dark:#111;
-    --dark2:#1c1c1c;
-    --card:#222;
-  }
-
-  body{
-    margin:0;
-    font-family:Arial, Helvetica, sans-serif;
-    background:var(--dark);
-    color:#fff;
-  }
-
-  header{
-    display:flex;
-    gap:12px;
-    padding:15px 20px;
-    background:var(--dark2);
-    border-bottom:2px solid var(--yellow);
-  }
-
-  header button{
-    background:transparent;
-    color:#fff;
-    border:2px solid var(--yellow);
-    padding:10px 18px;
-    font-weight:bold;
-    cursor:pointer;
-    border-radius:6px;
-    transition:.2s;
-  }
-
-  header button:hover{
-    background:var(--yellow);
-    color:#000;
-  }
-
-  .container{
-    padding:25px;
-    max-width:900px;
-    margin:auto;
-  }
-
-  .card{
-    background:var(--card);
-    padding:15px;
-    margin-bottom:15px;
-    border-radius:10px;
-    display:flex;
-    align-items:center;
-    gap:20px;
-    border-left:6px solid var(--yellow);
+window.addMatch=()=>{
+if(!isAdmin)return;
+const f1=file1.files[0],f2=file2.files[0];
+if(!f1||!f2)return alert('Foto seç');
+const r1=new FileReader(),r2=new FileReader();
+r1.onload=()=>{r2.onload=async()=>{
+await addDoc(collection(db,'matches'),{n1:n1.value,n2:n2.value,img1:r1.result,img2:r2.result});};r2.readAsDataURL(f2)};
+r1.readAsDataURL(f1);
 }
 
-.fighter{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    flex:1;
+window.addScore=()=>{
+if(!isAdmin)return;
+const f=scoreFile.files[0];
+if(!f)return alert('Foto seç');
+const r=new FileReader();
+r.onload=async()=>{await addDoc(collection(db,'scores'),{name:pn.value,score:ps.value,photo:r.result});};
+r.readAsDataURL(f);
 }
 
-.fighter.right{
-    justify-content:flex-end;
-    text-align:right;
-}
+onSnapshot(collection(db,'matches'),snap=>{
+musabaka.innerHTML='';snap.forEach(d=>{const m=d.data();
+musabaka.innerHTML+=`<div class="card"><div class="fighter"><img src="${m.img1}"><span>${m.n1}</span></div><div class="vs">VS</div><div class="fighter right"><span>${m.n2}</span><img src="${m.img2}"></div>${isAdmin?`<button onclick=\"deleteMatch('${d.id}')\">Sil</button>`:''}</div>`});});
 
-.vs{
-    color:var(--yellow);
-    font-weight:bold;
-    font-size:20px;
-}
+onSnapshot(collection(db,'scores'),snap=>{
+puan.innerHTML='';snap.forEach(d=>{const s=d.data();
+puan.innerHTML+=`<div class="card"><img src="${s.photo}"><b>${s.name}</b> - ${s.score}${isAdmin?`<button onclick=\\\"deleteScore('${d.id}')\\\">Sil</button>`:''}</div>`});});
 
-  .card b{
-    color:var(--yellow);
-    margin:0 10px;
-  }
-
-  img{
-    width:70px;
-    height:70px;
-    object-fit:cover;
-    border-radius:8px;
-    border:2px solid var(--yellow);
-  }
-
-  .card button{
-    margin-left:auto;
-    background:var(--yellow);
-    color:#000;
-    border:none;
-    padding:8px 14px;
-    border-radius:6px;
-    font-weight:bold;
-    cursor:pointer;
-  }
-
-  .card button:hover{opacity:.8}
-
-  input{
-    width:100%;
-    padding:10px;
-    margin-bottom:10px;
-    border-radius:6px;
-    border:none;
-    outline:none;
-  }
-
-  h3{
-    color:var(--yellow);
-    margin-top:30px;
-  }
-</style>
-</head>
-<body>
-
-<header>
-  <button onclick="showPage('musabaka')">MÜSABAKALAR</button>
-  <button onclick="showPage('puan')">PUAN LİSTESİ</button>
-  <button onclick="showPage('admin')">ADMİN</button>
-</header>
-
-<div id="musabaka" class="container"></div>
-<div id="puan" class="container" style="display:none"></div>
-
-<div id="admin" class="container" style="display:none">
-  <div id="loginBox">
-    <input id="pass" type="password" placeholder="Şifre">
-    <button onclick="login()">Giriş</button>
-  </div>
-
-  <div id="panel" style="display:none">
-    <h3>Müsabaka Ekle</h3>
-    <input id="n1" placeholder="Sporcu 1">
-    <input id="file1" type="file">
-<input id="n2" placeholder="Sporcu 2">
-<input id="file2" type="file">
-    <button onclick="addMatch()">Ekle</button>
-
-    <h3>Puan Ekle</h3>
-    <input id="pn" placeholder="İsim">
-<input id="scoreFile" type="file">
-<input id="ps" placeholder="Puan (0-1)">
-    <button onclick="addScore()">Kaydet</button>
-  </div>
-</div>
-
+window.deleteMatch=id=>{if(isAdmin)deleteDoc(doc(db,'matches',id))};
+window.deleteScore=id=>{if(isAdmin)deleteDoc(doc(db,'scores',id))};
+</script>
 </body>
 </html>
