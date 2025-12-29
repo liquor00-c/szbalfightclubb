@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>SZBAL FİGHT CLUB</title>
+<title>Okul Güreş Müsabakası</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -17,9 +17,10 @@ header button:hover{background:var(--yellow);color:#000}
 .fighter.right{justify-content:flex-end;text-align:right}
 .vs{color:var(--yellow);font-size:22px;font-weight:bold}
 img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:2px solid var(--yellow)}
-.card button{background:var(--yellow);border:none;padding:8px 14px;font-weight:bold;border-radius:6px;cursor:pointer}
+.card button{background:var(--yellow);border:none;padding:6px 12px;font-weight:bold;border-radius:6px;cursor:pointer}
 input{width:100%;padding:10px;margin-bottom:10px;border-radius:6px;border:none}
 h3{color:var(--yellow)}
+small{color:#ccc}
 </style>
 </head>
 <body>
@@ -40,17 +41,11 @@ h3{color:var(--yellow)}
 </div>
 
 <div id="panel" style="display:none">
-<h3>Müsabaka Ekle</h3>
-<input id="n1" placeholder="Sporcu 1">
-<input id="file1" type="file">
-<input id="n2" placeholder="Sporcu 2">
-<input id="file2" type="file">
-<button onclick="addMatch()">Ekle</button>
-
 <h3>Puan Ekle</h3>
 <input id="pn" placeholder="İsim">
 <input id="scoreFile" type="file">
-<input id="ps" placeholder="Puan">
+<input id="win" placeholder="Galibiyet">
+<input id="lose" placeholder="Yenilgi">
 <button onclick="addScore()">Kaydet</button>
 </div>
 </div>
@@ -73,89 +68,70 @@ const db=getFirestore(app);
 let isAdmin=false;
 
 window.showPage=p=>{
-  ['musabaka','puan','admin'].forEach(id=>document.getElementById(id).style.display=id===p?'block':'none');
+['musabaka','puan','admin'].forEach(id=>document.getElementById(id).style.display=id===p?'block':'none');
 }
 
-window.login = () => {
-  if(pass.value==='ben1sma1ly1ld1r1m'){
-    isAdmin = true;
-    loginBox.style.display = 'none';
-    panel.style.display = 'block';
-    alert('Admin aktif');
-    renderMatches();
-    renderScores();
-  } else alert('Şifre yanlış');
-}
-
-window.addMatch=()=>{
-  if(!isAdmin)return;
-  const f1=file1.files[0],f2=file2.files[0];
-  if(!f1||!f2)return alert('Foto seç');
-  const r1=new FileReader(),r2=new FileReader();
-  r1.onload=()=>{r2.onload=async()=>{
-    await addDoc(collection(db,'matches'),{n1:n1.value,n2:n2.value,img1:r1.result,img2:r2.result});
-  };r2.readAsDataURL(f2)};
-  r1.readAsDataURL(f1);
+window.login=()=>{
+if(pass.value==='ben1sma1ly1ld1r1m'){
+isAdmin=true;
+loginBox.style.display='none';
+panel.style.display='block';
+alert('Admin aktif');
+renderScores();
+}else alert('Şifre yanlış');
 }
 
 window.addScore=()=>{
-  if(!isAdmin)return;
-  const f=scoreFile.files[0];
-  if(!f)return alert('Foto seç');
-  const r=new FileReader();
-  r.onload=async()=>{await addDoc(collection(db,'scores'),{name:pn.value,score:ps.value,photo:r.result});};
-  r.readAsDataURL(f);
+if(!isAdmin)return;
+const f=scoreFile.files[0];
+if(!f)return alert('Foto seç');
+const r=new FileReader();
+r.onload=async()=>{
+await addDoc(collection(db,'scores'),{
+name:pn.value,
+photo:r.result,
+win:Number(win.value)||0,
+lose:Number(lose.value)||0
+});
+};
+r.readAsDataURL(f);
 }
 
-// Fonksiyonlara ayır ve isAdmin değişince tekrar render edilecek
-const renderMatches = () => {
-  onSnapshot(collection(db,'matches'),snap=>{
-    musabaka.innerHTML='';
-    snap.forEach(d=>{
-      const m=d.data();
-      musabaka.innerHTML+=`
-      <div class="card">
-        <div class="fighter"><img src="${m.img1}"><span>${m.n1}</span></div>
-        <div class="vs">VS</div>
-        <div class="fighter right"><span>${m.n2}</span><img src="${m.img2}"></div>
-        ${isAdmin?`<button onclick="deleteMatch('${d.id}')">Sil</button>`:''}
-      </div>`;
-    });
-  });
+const renderScores=()=>{
+onSnapshot(collection(db,'scores'),snap=>{
+let list=[];
+snap.forEach(d=>{
+list.push({id:d.id,...d.data()});
+});
+
+list.sort((a,b)=>{
+if((b.win||0)!==(a.win||0)) return (b.win||0)-(a.win||0);
+return (a.lose||0)-(b.lose||0);
+});
+
+puan.innerHTML='';
+list.forEach(s=>{
+puan.innerHTML+=`
+<div class="card">
+<img src="${s.photo}">
+<div>
+<b>${s.name}</b><br>
+<small>${s.win||0} Galibiyet – ${s.lose||0} Yenilgi</small>
+</div>
+${isAdmin?`<button onclick="deleteScore('${s.id}')">Sil</button>`:''}
+</div>`;
+});
+});
 }
 
-const renderScores = () => {
-  onSnapshot(collection(db,'scores'),snap=>{
-    puan.innerHTML='';
-    snap.forEach(d=>{
-      const s=d.data();
-      puan.innerHTML+=`
-      <div class="card">
-        <img src="${s.photo}"><b>${s.name}</b> - ${s.score}
-        ${isAdmin?`<button onclick="deleteScore('${d.id}')">Sil</button>`:''}
-      </div>`;
-    });
-  });
-}
-
-// Başlangıçta çağır
-renderMatches();
 renderScores();
 
-window.deleteMatch=id=>{
-  if(!isAdmin) return alert('Yetkiniz yok');
-  if(confirm('Bu müsabakayı silmek istediğinize emin misiniz?')){
-    deleteDoc(doc(db,'matches',id));
-  }
-};
-
 window.deleteScore=id=>{
-  if(!isAdmin) return alert('Yetkiniz yok');
-  if(confirm('Bu puanı silmek istediğinize emin misiniz?')){
-    deleteDoc(doc(db,'scores',id));
-  }
-};
+if(!isAdmin)return;
+if(confirm('Silmek istiyor musun?')){
+deleteDoc(doc(db,'scores',id));
+}
+}
 </script>
 </body>
 </html>
-
