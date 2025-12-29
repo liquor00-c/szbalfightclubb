@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Okul Güreş Müsabakası</title>
+<title>Okul Güreş Sistemi</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -18,8 +18,7 @@ header button:hover{background:var(--yellow);color:#000}
 .vs{color:var(--yellow);font-size:22px;font-weight:bold}
 img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:2px solid var(--yellow)}
 .card button{background:var(--yellow);border:none;padding:6px 12px;font-weight:bold;border-radius:6px;cursor:pointer}
-input{width:100%;padding:10px;margin-bottom:10px;border-radius:6px;border:none}
-h3{color:var(--yellow)}
+input{width:100%;padding:8px;margin-bottom:8px;border-radius:6px;border:none}
 small{color:#ccc}
 </style>
 </head>
@@ -41,18 +40,27 @@ small{color:#ccc}
 </div>
 
 <div id="panel" style="display:none">
+
+<h3>Müsabaka Ekle</h3>
+<input id="n1" placeholder="Sporcu 1">
+<input id="file1" type="file">
+<input id="n2" placeholder="Sporcu 2">
+<input id="file2" type="file">
+<button onclick="addMatch()">Ekle</button>
+
 <h3>Puan Ekle</h3>
 <input id="pn" placeholder="İsim">
 <input id="scoreFile" type="file">
 <input id="win" placeholder="Galibiyet">
 <input id="lose" placeholder="Yenilgi">
 <button onclick="addScore()">Kaydet</button>
+
 </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAf116Bb_Rv-rXI8C47EeaIlwxJQbPk7ic",
@@ -77,9 +85,45 @@ isAdmin=true;
 loginBox.style.display='none';
 panel.style.display='block';
 alert('Admin aktif');
-renderScores();
 }else alert('Şifre yanlış');
 }
+
+/* ---------------- MÜSABAKALAR ---------------- */
+
+window.addMatch=()=>{
+if(!isAdmin)return;
+const f1=file1.files[0],f2=file2.files[0];
+if(!f1||!f2)return alert('Foto seç');
+const r1=new FileReader(),r2=new FileReader();
+r1.onload=()=>{r2.onload=async()=>{
+await addDoc(collection(db,'matches'),{
+n1:n1.value,n2:n2.value,img1:r1.result,img2:r2.result
+});
+};r2.readAsDataURL(f2)};
+r1.readAsDataURL(f1);
+}
+
+onSnapshot(collection(db,'matches'),snap=>{
+musabaka.innerHTML='';
+snap.forEach(d=>{
+const m=d.data();
+musabaka.innerHTML+=`
+<div class="card">
+<div class="fighter"><img src="${m.img1}"><b>${m.n1}</b></div>
+<div class="vs">VS</div>
+<div class="fighter right"><b>${m.n2}</b><img src="${m.img2}"></div>
+${isAdmin?`<button onclick="deleteMatch('${d.id}')">Sil</button>`:''}
+</div>`;
+});
+});
+
+window.deleteMatch=id=>{
+if(confirm('Müsabaka silinsin mi?')){
+deleteDoc(doc(db,'matches',id));
+}
+}
+
+/* ---------------- PUAN LİSTESİ ---------------- */
 
 window.addScore=()=>{
 if(!isAdmin)return;
@@ -97,12 +141,9 @@ lose:Number(lose.value)||0
 r.readAsDataURL(f);
 }
 
-const renderScores=()=>{
 onSnapshot(collection(db,'scores'),snap=>{
 let list=[];
-snap.forEach(d=>{
-list.push({id:d.id,...d.data()});
-});
+snap.forEach(d=>list.push({id:d.id,...d.data()}));
 
 list.sort((a,b)=>{
 if((b.win||0)!==(a.win||0)) return (b.win||0)-(a.win||0);
@@ -116,19 +157,28 @@ puan.innerHTML+=`
 <img src="${s.photo}">
 <div>
 <b>${s.name}</b><br>
-<small>${s.win||0} Galibiyet – ${s.lose||0} Yenilgi</small>
+<small>${s.win} Galibiyet – ${s.lose} Yenilgi</small>
 </div>
-${isAdmin?`<button onclick="deleteScore('${s.id}')">Sil</button>`:''}
+${isAdmin?`
+<button onclick="editScore('${s.id}',${s.win},${s.lose})">Değiştir</button>
+<button onclick="deleteScore('${s.id}')">Sil</button>
+`:''}
 </div>`;
 });
 });
+
+window.editScore=(id,w,l)=>{
+const newWin=prompt('Galibiyet:',w);
+const newLose=prompt('Yenilgi:',l);
+if(newWin===null||newLose===null)return;
+updateDoc(doc(db,'scores',id),{
+win:Number(newWin),
+lose:Number(newLose)
+});
 }
 
-renderScores();
-
 window.deleteScore=id=>{
-if(!isAdmin)return;
-if(confirm('Silmek istiyor musun?')){
+if(confirm('Puan silinsin mi?')){
 deleteDoc(doc(db,'scores',id));
 }
 }
