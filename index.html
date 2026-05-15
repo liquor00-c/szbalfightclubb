@@ -1,188 +1,415 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<title>Okul Güreş Sistemi</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Mezuniyet Takip</title>
 
 <style>
-:root{--yellow:#f5c400;--dark:#111;--dark2:#1c1c1c;--card:#222}
-body{margin:0;font-family:Arial;background:var(--dark);color:#fff}
-header{display:flex;gap:12px;padding:15px;background:var(--dark2);border-bottom:2px solid var(--yellow)}
-header button{background:transparent;color:#fff;border:2px solid var(--yellow);padding:10px 18px;font-weight:bold;border-radius:6px;cursor:pointer}
-header button:hover{background:var(--yellow);color:#000}
-.container{padding:25px;max-width:900px;margin:auto}
-.card{background:var(--card);padding:15px;margin-bottom:15px;border-radius:10px;display:flex;align-items:center;gap:20px;border-left:6px solid var(--yellow)}
-.fighter{display:flex;align-items:center;gap:10px;flex:1}
-.fighter.right{justify-content:flex-end;text-align:right}
-.vs{color:var(--yellow);font-size:22px;font-weight:bold}
-img{width:70px;height:70px;object-fit:cover;border-radius:8px;border:2px solid var(--yellow)}
-.card button{background:var(--yellow);border:none;padding:6px 12px;font-weight:bold;border-radius:6px;cursor:pointer}
-input{width:100%;padding:8px;margin-bottom:8px;border-radius:6px;border:none}
-small{color:#ccc}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, sans-serif;
+}
+
+body{
+    background:#0d0d0d;
+    color:white;
+    padding:15px;
+}
+
+/* Açılış Video */
+
+#videoEkran{
+    position:fixed;
+    inset:0;
+    background:black;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+#videoEkran video{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+/* Ana Site */
+
+#site{
+    display:none;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:18px;
+    font-size:28px;
+    font-weight:800;
+}
+
+.ust{
+    display:flex;
+    gap:10px;
+    margin-bottom:12px;
+}
+
+input{
+    flex:1;
+    background:#1b1b1b;
+    border:none;
+    color:white;
+    padding:14px;
+    border-radius:14px;
+    outline:none;
+    font-size:15px;
+}
+
+input::placeholder{
+    color:#888;
+}
+
+.ekleBtn{
+    background:linear-gradient(45deg,#00b894,#00cec9);
+    border:none;
+    color:white;
+    padding:14px 18px;
+    border-radius:14px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.arama{
+    width:100%;
+    margin-bottom:16px;
+}
+
+/* İstatistik */
+
+.istatistik{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-bottom:18px;
+}
+
+.kart{
+    background:#171717;
+    border:1px solid #2a2a2a;
+    border-radius:18px;
+    padding:14px;
+    text-align:center;
+}
+
+.kart p{
+    color:#999;
+    font-size:13px;
+    margin-bottom:6px;
+}
+
+.kart h2{
+    font-size:21px;
+}
+
+/* Liste */
+
+#liste{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.kisi{
+    background:#171717;
+    border:1px solid #2a2a2a;
+    border-radius:18px;
+    padding:15px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+.sol h3{
+    font-size:17px;
+    margin-bottom:5px;
+}
+
+.sol p{
+    color:#999;
+    font-size:14px;
+}
+
+.sag{
+    display:flex;
+    gap:8px;
+}
+
+.durumBtn{
+    border:none;
+    padding:10px 14px;
+    border-radius:12px;
+    font-weight:bold;
+    cursor:pointer;
+    background:#d63031;
+    color:white;
+}
+
+.odendi{
+    background:#00b894 !important;
+}
+
+.silBtn{
+    border:none;
+    padding:10px 14px;
+    border-radius:12px;
+    background:#333;
+    color:white;
+    cursor:pointer;
+}
+
+.bos{
+    text-align:center;
+    color:#777;
+    margin-top:20px;
+}
+
+/* Telefon */
+
+@media(max-width:600px){
+
+    .istatistik{
+        grid-template-columns:1fr;
+    }
+
+    .kisi{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .sag{
+        width:100%;
+    }
+
+    .sag button{
+        flex:1;
+    }
+}
+
 </style>
 </head>
 <body>
 
-<header>
-<button onclick="showPage('musabaka')">MÜSABAKALAR</button>
-<button onclick="showPage('puan')">PUAN LİSTESİ</button>
-<button onclick="showPage('admin')">ADMİN</button>
-</header>
+<!-- Açılış Videosu -->
 
-<div id="musabaka" class="container"></div>
-<div id="puan" class="container" style="display:none"></div>
 
-<div id="admin" class="container" style="display:none">
-<div id="loginBox">
-<input id="pass" type="password" placeholder="Admin Şifre">
-<button onclick="login()">Giriş</button>
-</div>
+<!-- Site -->
 
-<div id="panel" style="display:none">
+<div id="site">
 
-<h3>Müsabaka Ekle</h3>
-<input id="n1" placeholder="Sporcu 1">
-<input id="file1" type="file">
-<input id="n2" placeholder="Sporcu 2">
-<input id="file2" type="file">
-<button onclick="addMatch()">Ekle</button>
+<h1>🎓 Mezuniyet Takip</h1>
 
-<h3>Puan Ekle</h3>
-<input id="pn" placeholder="İsim">
-<input id="scoreFile" type="file">
-<input id="win" placeholder="Galibiyet">
-<input id="lose" placeholder="Yenilgi">
-<button onclick="addScore()">Kaydet</button>
+<div class="ust">
+
+    <input type="text" id="isimInput" placeholder="İsim gir">
+
+    <button class="ekleBtn" onclick="kisiEkle()">
+        Ekle
+    </button>
 
 </div>
+
+<input
+class="arama"
+type="text"
+id="aramaInput"
+placeholder="İsim ara..."
+onkeyup="listeyiGoster()">
+
+<div class="istatistik">
+
+    <div class="kart">
+        <p>Toplam Kişi</p>
+        <h2 id="toplamKisi">0</h2>
+    </div>
+
+    <div class="kart">
+        <p>Ödeyen</p>
+        <h2 id="odeyen">0</h2>
+    </div>
+
+    <div class="kart">
+        <p>Toplanan</p>
+        <h2 id="toplamPara">0 TL</h2>
+    </div>
+
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<div id="liste"></div>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAf116Bb_Rv-rXI8C47EeaIlwxJQbPk7ic",
-  authDomain: "szbalfightclub-3a1ae.firebaseapp.com",
-  projectId: "szbalfightclub-3a1ae",
-  storageBucket: "szbalfightclub-3a1ae.firebasestorage.app",
-  messagingSenderId: "303031679666",
-  appId: "1:303031679666:web:142d4e8b5c4201353a67ab"
+</div>
+
+<script>
+
+const UCRET = 1500;
+
+let kisiler = JSON.parse(localStorage.getItem("kisiler")) || [];
+
+/* Açılış Videosu */
+
+const video = document.getElementById("introVideo");
+
+video.onended = () => {
+
+    document.getElementById("videoEkran").style.display = "none";
+    document.getElementById("site").style.display = "block";
+
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
-let isAdmin=false;
+/* Kaydet */
 
-window.showPage=p=>{
-['musabaka','puan','admin'].forEach(id=>document.getElementById(id).style.display=id===p?'block':'none');
+function kaydet(){
+
+    localStorage.setItem("kisiler", JSON.stringify(kisiler));
+
 }
 
-window.login=()=>{
-if(pass.value==='123456789a'){
-isAdmin=true;
-loginBox.style.display='none';
-panel.style.display='block';
-alert('Admin aktif');
-}else alert('Şifre yanlış');
+/* İstatistik */
+
+function istatistik(){
+
+    const odeyen = kisiler.filter(x => x.odendi).length;
+
+    document.getElementById("toplamKisi").innerText = kisiler.length;
+
+    document.getElementById("odeyen").innerText = odeyen;
+
+    document.getElementById("toplamPara").innerText =
+        (odeyen * UCRET) + " TL";
 }
 
-/* ---------------- MÜSABAKALAR ---------------- */
+/* Liste */
 
-window.addMatch=()=>{
-if(!isAdmin)return;
-const f1=file1.files[0],f2=file2.files[0];
-if(!f1||!f2)return alert('Foto seç');
-const r1=new FileReader(),r2=new FileReader();
-r1.onload=()=>{r2.onload=async()=>{
-await addDoc(collection(db,'matches'),{
-n1:n1.value,n2:n2.value,img1:r1.result,img2:r2.result
-});
-};r2.readAsDataURL(f2)};
-r1.readAsDataURL(f1);
+function listeyiGoster(){
+
+    const liste = document.getElementById("liste");
+
+    const arama =
+        document.getElementById("aramaInput")
+        .value
+        .toLowerCase();
+
+    liste.innerHTML = "";
+
+    const filtreli = kisiler.filter(x =>
+        x.isim.toLowerCase().includes(arama)
+    );
+
+    if(filtreli.length === 0){
+
+        liste.innerHTML =
+        `<div class="bos">Kayıt yok</div>`;
+    }
+
+    filtreli.forEach((kisi,index)=>{
+
+        const gercekIndex = kisiler.indexOf(kisi);
+
+        liste.innerHTML += `
+
+        <div class="kisi">
+
+            <div class="sol">
+
+                <h3>${kisi.isim}</h3>
+
+                <p>${UCRET} TL</p>
+
+            </div>
+
+            <div class="sag">
+
+                <button
+                class="durumBtn ${kisi.odendi ? 'odendi' : ''}"
+                onclick="durumDegistir(${gercekIndex})">
+
+                ${kisi.odendi ? 'Verdi' : 'Vermedi'}
+
+                </button>
+
+                <button
+                class="silBtn"
+                onclick="sil(${gercekIndex})">
+
+                Sil
+
+                </button>
+
+            </div>
+
+        </div>
+
+        `;
+    });
+
+    istatistik();
 }
 
-onSnapshot(collection(db,'matches'),snap=>{
-musabaka.innerHTML='';
-snap.forEach(d=>{
-const m=d.data();
-musabaka.innerHTML+=`
-<div class="card">
-<div class="fighter"><img src="${m.img1}"><b>${m.n1}</b></div>
-<div class="vs">VS</div>
-<div class="fighter right"><b>${m.n2}</b><img src="${m.img2}"></div>
-${isAdmin?`<button onclick="deleteMatch('${d.id}')">Sil</button>`:''}
-</div>`;
-});
-});
+/* Kişi Ekle */
 
-window.deleteMatch=id=>{
-if(confirm('Müsabaka silinsin mi?')){
-deleteDoc(doc(db,'matches',id));
-}
-}
+function kisiEkle(){
 
-/* ---------------- PUAN LİSTESİ ---------------- */
+    const input =
+        document.getElementById("isimInput");
 
-window.addScore=()=>{
-if(!isAdmin)return;
-const f=scoreFile.files[0];
-if(!f)return alert('Foto seç');
-const r=new FileReader();
-r.onload=async()=>{
-await addDoc(collection(db,'scores'),{
-name:pn.value,
-photo:r.result,
-win:Number(win.value)||0,
-lose:Number(lose.value)||0
-});
-};
-r.readAsDataURL(f);
+    const isim = input.value.trim();
+
+    if(isim === "") return;
+
+    kisiler.push({
+
+        isim:isim,
+        odendi:false
+
+    });
+
+    kaydet();
+
+    listeyiGoster();
+
+    input.value = "";
 }
 
-onSnapshot(collection(db,'scores'),snap=>{
-let list=[];
-snap.forEach(d=>list.push({id:d.id,...d.data()}));
+/* Durum */
 
-list.sort((a,b)=>{
-if((b.win||0)!==(a.win||0)) return (b.win||0)-(a.win||0);
-return (a.lose||0)-(b.lose||0);
-});
+function durumDegistir(index){
 
-puan.innerHTML='';
-list.forEach(s=>{
-puan.innerHTML+=`
-<div class="card">
-<img src="${s.photo}">
-<div>
-<b>${s.name}</b><br>
-<small>${s.win} Galibiyet – ${s.lose} Yenilgi</small>
-</div>
-${isAdmin?`
-<button onclick="editScore('${s.id}',${s.win},${s.lose})">Değiştir</button>
-<button onclick="deleteScore('${s.id}')">Sil</button>
-`:''}
-</div>`;
-});
-});
+    kisiler[index].odendi =
+        !kisiler[index].odendi;
 
-window.editScore=(id,w,l)=>{
-const newWin=prompt('Galibiyet:',w);
-const newLose=prompt('Yenilgi:',l);
-if(newWin===null||newLose===null)return;
-updateDoc(doc(db,'scores',id),{
-win:Number(newWin),
-lose:Number(newLose)
-});
+    kaydet();
+
+    listeyiGoster();
 }
 
-window.deleteScore=id=>{
-if(confirm('Puan silinsin mi?')){
-deleteDoc(doc(db,'scores',id));
+/* Sil */
+
+function sil(index){
+
+    kisiler.splice(index,1);
+
+    kaydet();
+
+    listeyiGoster();
 }
-}
+
+listeyiGoster();
+
 </script>
+
 </body>
 </html>
-
